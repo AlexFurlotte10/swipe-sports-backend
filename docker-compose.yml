@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=swipe_sports
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - ENV=development
+      - CORS_ORIGIN=http://localhost:3000
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - .:/app
+    networks:
+      - swipe-sports-network
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=swipe_sports
+      - MYSQL_USER=swipe_user
+      - MYSQL_PASSWORD=swipe_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - swipe-sports-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - swipe-sports-network
+
+  # Optional: Add phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=password
+    depends_on:
+      - mysql
+    networks:
+      - swipe-sports-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  swipe-sports-network:
+    driver: bridge 
