@@ -13,8 +13,8 @@ COPY . .
 # Download dependencies and create go.sum based on actual imports
 RUN go mod tidy && go mod download
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+# Build the application  
+RUN CGO_ENABLED=0 GOOS=linux go build -o main main_simple.go
 
 # Final stage
 FROM alpine:latest

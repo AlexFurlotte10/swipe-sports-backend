@@ -1,0 +1,18 @@
+EXACT VERCEL ENVIRONMENT VARIABLES TO ADD:
+
+Variable 1:
+Name: VITE_API_BASE_URL
+Value: https://swipe-sports-backend-production-d5d9f688.up.railway.app
+Environments: ✓ Production ✓ Preview
+
+Variable 2: 
+Name: VITE_WS_BASE_URL
+Value: wss://swipe-sports-backend-production-d5d9f688.up.railway.app  
+Environments: ✓ Production ✓ Preview
+
+STEPS:
+1. Go to https://vercel.com/dashboard
+2. Select your "swipe-sports" project  
+3. Settings → Environment Variables
+4. Add both variables above
+5. Redeploy your frontend
