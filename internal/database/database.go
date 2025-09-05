@@ -54,6 +54,9 @@ func initSchema() error {
 			oauth_id VARCHAR(255) UNIQUE,
 			oauth_provider VARCHAR(50),
 			name VARCHAR(255) NOT NULL,
+			first_name VARCHAR(255),
+			last_name VARCHAR(255),
+			age INT,
 			email VARCHAR(255) UNIQUE,
 			gender ENUM('male', 'female', 'other'),
 			location VARCHAR(255),
@@ -64,14 +67,18 @@ func initSchema() error {
 			bio TEXT,
 			sport_preferences JSON,
 			skill_level VARCHAR(50),
+			ntrp_rating DECIMAL(3, 1),
 			play_style VARCHAR(100),
+			preferred_timeslots VARCHAR(100),
 			availability JSON,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			INDEX idx_location (location),
 			INDEX idx_gender (gender),
 			INDEX idx_rank (rank),
-			INDEX idx_oauth (oauth_id, oauth_provider)
+			INDEX idx_oauth (oauth_id, oauth_provider),
+			INDEX idx_age (age),
+			INDEX idx_skill_level (skill_level)
 		)`,
 		`CREATE TABLE IF NOT EXISTS swipes (
 			id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -114,6 +121,32 @@ func initSchema() error {
 	for _, query := range queries {
 		if _, err := DB.Exec(query); err != nil {
 			return fmt.Errorf("failed to execute query: %w", err)
+		}
+	}
+
+	// Run migrations to add new columns if they don't exist
+	if err := runMigrations(); err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	return nil
+}
+
+func runMigrations() error {
+	migrations := []string{
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(255)`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(255)`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS age INT`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS ntrp_rating DECIMAL(3, 1)`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_timeslots VARCHAR(100)`,
+		`ALTER TABLE users ADD INDEX IF NOT EXISTS idx_age (age)`,
+		`ALTER TABLE users ADD INDEX IF NOT EXISTS idx_skill_level (skill_level)`,
+	}
+
+	for _, migration := range migrations {
+		if _, err := DB.Exec(migration); err != nil {
+			// Ignore errors for existing columns/indexes, but log them
+			log.Printf("Migration warning (likely column/index already exists): %v", err)
 		}
 	}
 

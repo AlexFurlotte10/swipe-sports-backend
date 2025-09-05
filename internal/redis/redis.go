@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"swipe-sports-backend/internal/config"
@@ -128,7 +129,7 @@ func CheckRateLimit(identifier string, limit int, window int) (bool, error) {
 	}
 	
 	if count == 1 {
-		Client.Expire(ctx, key, int64(window))
+		Client.Expire(ctx, key, time.Duration(window)*time.Second)
 	}
 	
 	return count <= int64(limit), nil

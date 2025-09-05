@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -11,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"swipe-sports-backend/internal/auth"
 	"swipe-sports-backend/internal/models"
 	"swipe-sports-backend/internal/service"
 	"swipe-sports-backend/internal/repository"

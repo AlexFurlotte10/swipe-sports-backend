@@ -88,6 +88,7 @@ func (s *Server) setupRoutes() {
 				authHandler := handler.NewAuthHandler()
 				profile.GET("/me", authHandler.GetMyProfile)
 				profile.PUT("/me", authHandler.UpdateMyProfile)
+				profile.PUT("/update", authHandler.UpdateProfileFromOnboarding)
 				profile.POST("/picture", authHandler.UploadProfilePicture)
 			}
 

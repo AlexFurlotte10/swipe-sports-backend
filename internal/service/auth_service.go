@@ -115,6 +115,15 @@ func (s *AuthService) UpdateUser(userID int64, updateReq models.UpdateUserReques
 	if updateReq.Name != nil {
 		user.Name = *updateReq.Name
 	}
+	if updateReq.FirstName != nil {
+		user.FirstName = updateReq.FirstName
+	}
+	if updateReq.LastName != nil {
+		user.LastName = updateReq.LastName
+	}
+	if updateReq.Age != nil {
+		user.Age = updateReq.Age
+	}
 	if updateReq.Gender != nil {
 		user.Gender = updateReq.Gender
 	}
@@ -142,8 +151,14 @@ func (s *AuthService) UpdateUser(userID int64, updateReq models.UpdateUserReques
 	if updateReq.PlayStyle != nil {
 		user.PlayStyle = updateReq.PlayStyle
 	}
+	if updateReq.PreferredTimeslots != nil {
+		user.PreferredTimeslots = updateReq.PreferredTimeslots
+	}
 	if updateReq.Availability != nil {
 		user.Availability = *updateReq.Availability
+	}
+	if updateReq.NTRPRating != nil {
+		user.NTRPRating = updateReq.NTRPRating
 	}
 
 	// Save to database
@@ -157,6 +172,103 @@ func (s *AuthService) UpdateUser(userID int64, updateReq models.UpdateUserReques
 	}
 
 	return user, nil
+}
+
+// UpdateProfileFromOnboarding handles comprehensive profile updates from frontend onboarding
+func (s *AuthService) UpdateProfileFromOnboarding(userID int64, profileReq models.ProfileUpdateRequest) (*AuthResponse, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	if user == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// Validate gender enum
+	if profileReq.Gender != models.GenderMale && profileReq.Gender != models.GenderFemale && profileReq.Gender != models.GenderOther {
+		return nil, fmt.Errorf("invalid gender value")
+	}
+
+	// Validate skill level
+	validSkillLevels := []string{"beginner", "intermediate", "advanced"}
+	isValidSkill := false
+	for _, level := range validSkillLevels {
+		if profileReq.SkillLevel == level {
+			isValidSkill = true
+			break
+		}
+	}
+	if !isValidSkill {
+		return nil, fmt.Errorf("invalid skill level")
+	}
+
+	// Validate play style
+	if profileReq.PlayStyle != "ranked" && profileReq.PlayStyle != "fun" {
+		return nil, fmt.Errorf("invalid play style")
+	}
+
+	// Validate preferred timeslots
+	validTimeslots := []string{"weekends-evenings", "anytime-anywhere", "weekends-only", "weekdays-only"}
+	isValidTimeslot := false
+	for _, timeslot := range validTimeslots {
+		if profileReq.PreferredTimeslots == timeslot {
+			isValidTimeslot = true
+			break
+		}
+	}
+	if !isValidTimeslot {
+		return nil, fmt.Errorf("invalid preferred timeslots")
+	}
+
+	// Update user fields
+	user.Name = profileReq.Name
+	user.FirstName = &profileReq.FirstName
+	user.LastName = &profileReq.LastName
+	user.Age = &profileReq.Age
+	user.Gender = &profileReq.Gender
+	user.Location = &profileReq.Location
+	user.SkillLevel = &profileReq.SkillLevel
+	user.NTRPRating = &profileReq.NTRPRating
+	user.PlayStyle = &profileReq.PlayStyle
+	user.PreferredTimeslots = &profileReq.PreferredTimeslots
+	user.Bio = &profileReq.Bio
+	user.SportPreferences = profileReq.SportPreferences
+	user.Availability = profileReq.Availability
+
+	// TODO: Add geocoding for location to get lat/lng
+	// For now, set default coordinates (this should be implemented with actual geocoding service)
+	if user.Latitude == nil || user.Longitude == nil {
+		defaultLat := 43.6426 // Halifax coordinates as placeholder
+		defaultLng := -79.3871
+		user.Latitude = &defaultLat
+		user.Longitude = &defaultLng
+	}
+
+	// Save to database
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// Update cache
+	if err := s.cacheUserProfile(user); err != nil {
+		fmt.Printf("Failed to cache user profile: %v\n", err)
+	}
+
+	// Generate new token with updated user info
+	var email string
+	if user.Email != nil {
+		email = *user.Email
+	}
+	jwtToken, err := auth.GenerateToken(user.ID, email)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return &AuthResponse{
+		Token: jwtToken,
+		User:  *user,
+	}, nil
 }
 
 func (s *AuthService) cacheUserProfile(user *models.User) error {

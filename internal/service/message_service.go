@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"swipe-sports-backend/internal/models"
 	"swipe-sports-backend/internal/redis"

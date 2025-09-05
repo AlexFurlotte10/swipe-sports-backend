@@ -38,7 +38,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	}
 
 	// Validate provider
-	if req.Provider != "google" && req.Provider != "apple" && req.Provider != "facebook" {
+	if req.Provider != "google" && req.Provider != "apple" && req.Provider != "facebook" && req.Provider != "auth0" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported OAuth provider"})
 		return
 	}
@@ -62,7 +62,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Validate provider
-	if req.Provider != "google" && req.Provider != "apple" && req.Provider != "facebook" {
+	if req.Provider != "google" && req.Provider != "apple" && req.Provider != "facebook" && req.Provider != "auth0" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported OAuth provider"})
 		return
 	}
@@ -198,4 +198,27 @@ func (h *AuthHandler) UploadProfilePicture(c *gin.Context) {
 		"profile_pic_url": profilePicURL,
 		"user":            user,
 	})
+}
+
+// PUT /profile/update - comprehensive profile update from onboarding
+func (h *AuthHandler) UpdateProfileFromOnboarding(c *gin.Context) {
+	userID, exists := auth.GetUserIDFromContext(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	var req models.ProfileUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	authResponse, err := h.authService.UpdateProfileFromOnboarding(userID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, authResponse)
 } 

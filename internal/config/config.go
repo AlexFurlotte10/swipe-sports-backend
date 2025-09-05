@@ -42,11 +42,17 @@ type OAuthConfig struct {
 	Google   OAuthProvider
 	Apple    OAuthProvider
 	Facebook OAuthProvider
+	Auth0    Auth0Provider
 }
 
 type OAuthProvider struct {
 	ClientID     string
 	ClientSecret string
+}
+
+type Auth0Provider struct {
+	Domain   string
+	ClientID string
 }
 
 type AWSConfig struct {
@@ -114,6 +120,10 @@ func Load() error {
 		Facebook: OAuthProvider{
 			ClientID:     getEnv("FACEBOOK_CLIENT_ID", ""),
 			ClientSecret: getEnv("FACEBOOK_CLIENT_SECRET", ""),
+		},
+		Auth0: Auth0Provider{
+			Domain:   getEnv("AUTH0_DOMAIN", ""),
+			ClientID: getEnv("AUTH0_CLIENT_ID", ""),
 		},
 	}
 

@@ -20,17 +20,17 @@ func NewUserRepository() *UserRepository {
 func (r *UserRepository) Create(user *models.User) error {
 	query := `
 		INSERT INTO users (
-			oauth_id, oauth_provider, name, email, gender, location, 
+			oauth_id, oauth_provider, name, first_name, last_name, age, email, gender, location, 
 			latitude, longitude, rank, profile_pic_url, bio, 
-			sport_preferences, skill_level, play_style, availability
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			sport_preferences, skill_level, ntrp_rating, play_style, preferred_timeslots, availability
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := r.db.Exec(query,
-		user.OAuthID, user.OAuthProvider, user.Name, user.Email, user.Gender,
+		user.OAuthID, user.OAuthProvider, user.Name, user.FirstName, user.LastName, user.Age, user.Email, user.Gender,
 		user.Location, user.Latitude, user.Longitude, user.Rank,
 		user.ProfilePicURL, user.Bio, user.SportPreferences, user.SkillLevel,
-		user.PlayStyle, user.Availability,
+		user.NTRPRating, user.PlayStyle, user.PreferredTimeslots, user.Availability,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
@@ -50,10 +50,10 @@ func (r *UserRepository) GetByID(id int64) (*models.User, error) {
 	
 	var user models.User
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID, &user.OAuthID, &user.OAuthProvider, &user.Name, &user.Email,
+		&user.ID, &user.OAuthID, &user.OAuthProvider, &user.Name, &user.FirstName, &user.LastName, &user.Age, &user.Email,
 		&user.Gender, &user.Location, &user.Latitude, &user.Longitude, &user.Rank,
 		&user.ProfilePicURL, &user.Bio, &user.SportPreferences, &user.SkillLevel,
-		&user.PlayStyle, &user.Availability, &user.CreatedAt, &user.UpdatedAt,
+		&user.NTRPRating, &user.PlayStyle, &user.PreferredTimeslots, &user.Availability, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -70,10 +70,10 @@ func (r *UserRepository) GetByOAuthID(oauthID, provider string) (*models.User, e
 	
 	var user models.User
 	err := r.db.QueryRow(query, oauthID, provider).Scan(
-		&user.ID, &user.OAuthID, &user.OAuthProvider, &user.Name, &user.Email,
+		&user.ID, &user.OAuthID, &user.OAuthProvider, &user.Name, &user.FirstName, &user.LastName, &user.Age, &user.Email,
 		&user.Gender, &user.Location, &user.Latitude, &user.Longitude, &user.Rank,
 		&user.ProfilePicURL, &user.Bio, &user.SportPreferences, &user.SkillLevel,
-		&user.PlayStyle, &user.Availability, &user.CreatedAt, &user.UpdatedAt,
+		&user.NTRPRating, &user.PlayStyle, &user.PreferredTimeslots, &user.Availability, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -88,17 +88,17 @@ func (r *UserRepository) GetByOAuthID(oauthID, provider string) (*models.User, e
 func (r *UserRepository) Update(user *models.User) error {
 	query := `
 		UPDATE users SET 
-			name = ?, email = ?, gender = ?, location = ?, latitude = ?, 
+			name = ?, first_name = ?, last_name = ?, age = ?, email = ?, gender = ?, location = ?, latitude = ?, 
 			longitude = ?, rank = ?, profile_pic_url = ?, bio = ?, 
-			sport_preferences = ?, skill_level = ?, play_style = ?, 
+			sport_preferences = ?, skill_level = ?, ntrp_rating = ?, play_style = ?, preferred_timeslots = ?,
 			availability = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
 
 	_, err := r.db.Exec(query,
-		user.Name, user.Email, user.Gender, user.Location, user.Latitude,
+		user.Name, user.FirstName, user.LastName, user.Age, user.Email, user.Gender, user.Location, user.Latitude,
 		user.Longitude, user.Rank, user.ProfilePicURL, user.Bio,
-		user.SportPreferences, user.SkillLevel, user.PlayStyle,
+		user.SportPreferences, user.SkillLevel, user.NTRPRating, user.PlayStyle, user.PreferredTimeslots,
 		user.Availability, user.ID,
 	)
 	if err != nil {
@@ -159,8 +159,8 @@ func (r *UserRepository) GetProfilesForSwipe(userID int64, filter models.Profile
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, name, gender, location, rank, profile_pic_url, bio, 
-		       sport_preferences, skill_level, play_style, availability, created_at
+		SELECT id, name, age, gender, location, rank, profile_pic_url, bio, 
+		       sport_preferences, skill_level, ntrp_rating, play_style, preferred_timeslots, availability, created_at
 		FROM users 
 		WHERE %s
 		ORDER BY RAND()
@@ -179,9 +179,9 @@ func (r *UserRepository) GetProfilesForSwipe(userID int64, filter models.Profile
 	for rows.Next() {
 		var profile models.UserProfile
 		err := rows.Scan(
-			&profile.ID, &profile.Name, &profile.Gender, &profile.Location,
+			&profile.ID, &profile.Name, &profile.Age, &profile.Gender, &profile.Location,
 			&profile.Rank, &profile.ProfilePicURL, &profile.Bio,
-			&profile.SportPreferences, &profile.SkillLevel, &profile.PlayStyle,
+			&profile.SportPreferences, &profile.SkillLevel, &profile.NTRPRating, &profile.PlayStyle, &profile.PreferredTimeslots,
 			&profile.Availability, &profile.CreatedAt,
 		)
 		if err != nil {

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -80,7 +81,7 @@ func (s *SwipeService) Swipe(swiperID int64, swipeReq models.SwipeRequest) (*mod
 func (s *SwipeService) GetProfilesForSwipe(userID int64, filter models.ProfileFilter) ([]models.UserProfile, error) {
 	// Try to get from cache first
 	cacheKey := fmt.Sprintf("profiles:swipe:%d", userID)
-	cachedData, err := redis.Client.Get(redis.Client.Context(), cacheKey).Bytes()
+	cachedData, err := redis.Client.Get(context.Background(), cacheKey).Bytes()
 	if err == nil {
 		var profiles []models.UserProfile
 		if err := json.Unmarshal(cachedData, &profiles); err == nil {
@@ -96,7 +97,7 @@ func (s *SwipeService) GetProfilesForSwipe(userID int64, filter models.ProfileFi
 
 	// Cache the results
 	if data, err := json.Marshal(profiles); err == nil {
-		redis.Client.Set(redis.Client.Context(), cacheKey, data, redis.ProfileCacheExpiry)
+		redis.Client.Set(context.Background(), cacheKey, data, redis.ProfileCacheExpiry)
 	}
 
 	return profiles, nil
