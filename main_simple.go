@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"fmt"
 	"log"
@@ -227,14 +228,21 @@ type AuthRequest struct {
 
 // Simple Auth0 token verification (mock for now)
 func verifyAuth0Token(token string) (string, string, string, error) {
-	// In a real implementation, you would verify the Auth0 JWT token
-	// For now, we'll just extract a mock user ID from the token
-	// This is just for testing - you need proper Auth0 verification
+	// For development/testing purposes, we'll create a stable user ID from the token
+	// In production, you would verify the JWT against Auth0's public key
 	
-	// Mock extraction - in reality you'd decode the JWT properly
-	userID := "auth0|" + token[0:10] // Simple mock
+	// Create a hash of the token for consistent user identification
+	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
+	userID := "auth0|" + hash[:16] // Use first 16 chars of hash for stable ID
+	
+	// For now, use mock data - in production you'd extract from JWT claims
 	email := "user@example.com"
 	name := "Test User"
+	
+	// Basic validation - ensure token looks like a JWT
+	if len(token) < 50 || !strings.Contains(token, ".") {
+		return "", "", "", fmt.Errorf("invalid token format")
+	}
 	
 	return userID, email, name, nil
 }
