@@ -67,7 +67,7 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 	query := `
 		INSERT INTO users (
 			oauth_id, oauth_provider, name, first_name, last_name, age, email, gender, location, 
-			latitude, longitude, rank, profile_pic_url, bio, 
+			latitude, longitude, ` + "`rank`" + `, profile_pic_url, bio, 
 			sport_preferences, skill_level, ntrp_rating, play_style, preferred_timeslots, availability
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
@@ -135,7 +135,7 @@ func (r *UserRepository) UpdateUser(user *models.User) error {
 	query := `
 		UPDATE users SET 
 			name = ?, first_name = ?, last_name = ?, age = ?, email = ?, gender = ?, location = ?, latitude = ?, 
-			longitude = ?, rank = ?, profile_pic_url = ?, bio = ?, 
+			longitude = ?, ` + "`rank`" + ` = ?, profile_pic_url = ?, bio = ?, 
 			sport_preferences = ?, skill_level = ?, ntrp_rating = ?, play_style = ?, preferred_timeslots = ?,
 			availability = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
