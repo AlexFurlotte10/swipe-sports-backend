@@ -386,7 +386,8 @@ func main() {
 				}
 
 				if err := userRepo.CreateUser(user); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+					log.Printf("Error creating user: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create user: %v", err)})
 					return
 				}
 			}
@@ -452,7 +453,8 @@ func main() {
 				}
 
 				if err := userRepo.CreateUser(user); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+					log.Printf("Error creating user: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create user: %v", err)})
 					return
 				}
 			}
