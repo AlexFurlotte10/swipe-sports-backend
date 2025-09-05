@@ -365,14 +365,24 @@ func main() {
 
 			// If user doesn't exist, create new user
 			if user == nil {
+				// Initialize with default values for all required fields
+				defaultGender := models.GenderOther
+				defaultSkillLevel := "beginner"
+				defaultPlayStyle := "fun"
+				defaultTimeslots := "anytime-anywhere"
+				
 				user = &models.User{
-					OAuthID:         &oauthID,
-					OAuthProvider:   &req.Provider,
-					Name:            name,
-					Email:           &email,
-					Rank:            1000,
-					SportPreferences: make(models.SportPreferences),
-					Availability:     make(models.Availability),
+					OAuthID:           &oauthID,
+					OAuthProvider:     &req.Provider,
+					Name:              name,
+					Email:             &email,
+					Gender:            &defaultGender,
+					SkillLevel:        &defaultSkillLevel,
+					PlayStyle:         &defaultPlayStyle,
+					PreferredTimeslots: &defaultTimeslots,
+					Rank:              1000,
+					SportPreferences:  make(models.SportPreferences),
+					Availability:      make(models.Availability),
 				}
 
 				if err := userRepo.CreateUser(user); err != nil {
@@ -421,15 +431,24 @@ func main() {
 			}
 
 			if user == nil {
-				// Create user if doesn't exist
+				// Create user if doesn't exist - initialize with default values
+				defaultGender := models.GenderOther
+				defaultSkillLevel := "beginner"
+				defaultPlayStyle := "fun"
+				defaultTimeslots := "anytime-anywhere"
+				
 				user = &models.User{
-					OAuthID:         &oauthID,
-					OAuthProvider:   &req.Provider,
-					Name:            name,
-					Email:           &email,
-					Rank:            1000,
-					SportPreferences: make(models.SportPreferences),
-					Availability:     make(models.Availability),
+					OAuthID:           &oauthID,
+					OAuthProvider:     &req.Provider,
+					Name:              name,
+					Email:             &email,
+					Gender:            &defaultGender,
+					SkillLevel:        &defaultSkillLevel,
+					PlayStyle:         &defaultPlayStyle,
+					PreferredTimeslots: &defaultTimeslots,
+					Rank:              1000,
+					SportPreferences:  make(models.SportPreferences),
+					Availability:      make(models.Availability),
 				}
 
 				if err := userRepo.CreateUser(user); err != nil {
