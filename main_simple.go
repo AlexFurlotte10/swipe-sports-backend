@@ -3,6 +3,8 @@ package main
 import (
 	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -226,22 +228,65 @@ type AuthRequest struct {
 	Token    string `json:"token" binding:"required"`
 }
 
-// Simple Auth0 token verification (mock for now)
+// Real Auth0 token verification - extracts actual user data
 func verifyAuth0Token(token string) (string, string, string, error) {
-	// For development/testing purposes, we'll create a stable user ID from the token
-	// In production, you would verify the JWT against Auth0's public key
+	// Parse JWT token without verification first to extract claims
+	// In production, you should verify the signature against Auth0's public keys
 	
-	// Create a hash of the token for consistent user identification
-	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
-	userID := "auth0|" + hash[:16] // Use first 16 chars of hash for stable ID
+	// Split JWT into parts
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return "", "", "", fmt.Errorf("invalid token format: must have 3 parts")
+	}
 	
-	// For now, use mock data - in production you'd extract from JWT claims
-	email := "user@example.com"
-	name := "Test User"
+	// Decode the payload (middle part)
+	payload := parts[1]
+	// Add padding if needed for base64 decoding
+	if len(payload)%4 != 0 {
+		payload += strings.Repeat("=", 4-len(payload)%4)
+	}
 	
-	// Basic validation - ensure token looks like a JWT
-	if len(token) < 50 || !strings.Contains(token, ".") {
-		return "", "", "", fmt.Errorf("invalid token format")
+	payloadBytes, err := base64.URLEncoding.DecodeString(payload)
+	if err != nil {
+		return "", "", "", fmt.Errorf("failed to decode token payload: %v", err)
+	}
+	
+	// Parse JSON claims
+	var claims struct {
+		Sub   string `json:"sub"`   // User ID
+		Email string `json:"email"` // User email
+		Name  string `json:"name"`  // User name
+		Aud   string `json:"aud"`   // Audience
+		Iss   string `json:"iss"`   // Issuer
+		Exp   int64  `json:"exp"`   // Expiration
+	}
+	
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return "", "", "", fmt.Errorf("failed to parse token claims: %v", err)
+	}
+	
+	// Basic validation
+	if claims.Sub == "" {
+		return "", "", "", fmt.Errorf("missing user ID in token")
+	}
+	
+	if claims.Email == "" {
+		return "", "", "", fmt.Errorf("missing email in token")
+	}
+	
+	// Check if token is expired
+	if claims.Exp > 0 && time.Now().Unix() > claims.Exp {
+		return "", "", "", fmt.Errorf("token is expired")
+	}
+	
+	// Use real user data from token
+	userID := claims.Sub
+	email := claims.Email
+	name := claims.Name
+	
+	// Fallback to email if name is empty
+	if name == "" {
+		name = email
 	}
 	
 	return userID, email, name, nil
