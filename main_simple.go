@@ -541,7 +541,7 @@ func main() {
 				c.JSON(http.StatusOK, user)
 			})
 
-			profile.PUT("/update", func(c *gin.Context) {
+			profile.PUT("/me", func(c *gin.Context) {
 				userID, _ := c.Get("user_id")
 
 				var req models.ProfileUpdateRequest
