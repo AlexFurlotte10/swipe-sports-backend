@@ -204,7 +204,15 @@ func (s *AuthService) UpdateProfileFromOnboarding(userID int64, profileReq model
 	}
 
 	// Validate play style
-	if profileReq.PlayStyle != "ranked" && profileReq.PlayStyle != "fun" {
+	validPlayStyles := []string{"ranked", "fun", "competitive", "casual"}
+	isValidPlayStyle := false
+	for _, style := range validPlayStyles {
+		if profileReq.PlayStyle == style {
+			isValidPlayStyle = true
+			break
+		}
+	}
+	if !isValidPlayStyle {
 		return nil, fmt.Errorf("invalid play style")
 	}
 
